@@ -18,7 +18,7 @@ describe 'Wiki' do
   end
 
   after(:all) do
-    # File.delete(test_file)
+    File.delete(test_file)
   end
 
   it "should have a layout" do
