@@ -12,7 +12,20 @@ def read_dir(dir)
   files
 end
 
+def read_file(file)
+  data = []
+  File.open(file, 'r').each_line do |l|
+    data << l
+  end
+  data.join "\n"
+end
+
+def write_file(file, data)
+  File.open(file, 'w') { |f| f.write(data) }
+end
+
 get '/' do
+  @slug = 'homepage'
   markdown :homepage
 end
 
@@ -25,7 +38,20 @@ get '/contents' do
   erb '<h1>Table of Contents</h1><ul>' + contents + '</ul>'
 end
 
+get '/:page/edit' do
+  @page = read_file(CONTENT + params[:page] + '.md')
+  @slug = params[:page]
+  erb :edit
+end
+
+post '/:page/edit' do
+  @content = params[:content]
+  write_file(CONTENT + params[:page] + '.md', @content)
+  redirect to("/#{params[:page]}")
+end
+
 get '/:page' do
+  @slug = params[:page]
   begin
     markdown params[:page].to_sym
   rescue

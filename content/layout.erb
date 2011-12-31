@@ -26,6 +26,11 @@
                 <%= yield %>
             </div>
       	</div>
+        <footer>
+          <% if @slug %>
+            <a href="<%= url("/#{@slug}/edit") %>">Edit page</a>
+          <% end %>
+        </footer>
     </div>
 </body>
 </html>
