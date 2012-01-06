@@ -11,7 +11,7 @@ end
 
 class SimpleWiki < Sinatra::Base
   configure do
-    $excl = ['.', '..', 'layout.erb']
+    $excl = ['.', '..', 'layout.erb', 'edit.erb']
     set :markdown, :layout_engine => :erb
     set :views, File.join(File.dirname(__FILE__),'content')
   end
@@ -32,11 +32,29 @@ class SimpleWiki < Sinatra::Base
     erb '<h1>Table of Contents</h1><ul>' + contents + '</ul>'
   end
 
-  get '/:page' do
+  get '/edit/:page' do |page|
+    @slug = page
+    @content = File.new(File.join(settings.views,"#{@slug}.md")).read
+    erb :edit
+  end
+
+  get '/:page' do |page|
     begin
-      markdown params[:page].to_sym
+      @slug, @edit = page, true
+      markdown page.to_sym
     rescue Exception => e
-      erb "<p><div class='alert-message'>#{e.to_s}</div></p>"
+      erb "<p><div class='alert-message error'>#{e.to_s}</div></p>"
+    end
+  end
+
+  post '/:page' do |page|
+    fname = File.join(settings.views,"#{page}.md")
+    if params[:content].empty?
+      File.delete(fname)
+      redirect '/'
+    else
+      File.open(fname,"w+") { |f| f.write(params[:content]) }
+      redirect page.to_sym
     end
   end
 end  

@@ -1,10 +1,15 @@
-<form action="<%= url("/#{@slug}/edit") %>" method="post">
+<form action="<%= url("/#{@slug}") %>" method="post" class="form-stacked">
   <fieldset>
     <legend>Edit content</legend>
-
-    <label for="f_content">Content</label>
-    <textarea id="f_content" name="content" rows="10" cols="30"><%= @page %></textarea>
+    <div class="clearfix">
+      <label for="f_content">Content</label>
+      <div class="input">
+        <textarea id="f_content" class="xxlarge" name="content" rows="10"><%= @content %></textarea>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" type="submit">Save</button>
+      <a href="/<%= @slug %>" class="btn">Cancel</a>
+    </div>
   </fieldset>
-
-  <button type="submit">Save</button>
 </form>
