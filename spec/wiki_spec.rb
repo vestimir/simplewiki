@@ -42,4 +42,36 @@ describe 'Wiki' do
       end
     end
   end
+
+  context "editing pages" do
+    before {
+      @slug = '__spec'
+      @file_name = File.join(settings.views,"#{@slug}.md")
+      post @slug, :content => 'test. please ignore'
+    }
+    after {
+      File.delete(@file_name) if File.exists?(@file_name)
+    }
+
+    it 'show edit form' do
+      get "/edit/%s" % @slug
+      should match %r/<form action="http:\/\/example.org\/#{@slug}" method="post"/i
+    end
+
+    it 'save the content' do
+      File.new(@file_name).read.should match %r/test. please ignore/i
+    end
+
+    it 'redirect to the same page after save' do
+      last_response.should be_redirect
+      follow_redirect!
+      last_request.url.should == "http://example.org/%s" % @slug
+      should match %r/test. please ignore/i
+    end
+
+    it 'delete page on empty content' do
+      post @slug, :content => ''
+      File.exists?(@file_name).should == false
+    end
+  end
 end
