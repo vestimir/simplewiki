@@ -1,0 +1,19 @@
+<form action="<%= url("/save") %>" method="post" class="form-stacked">
+  <fieldset>
+    <legend>Create new page</legend>
+    <div class="clearfix">
+      <label for="f_content">Content</label>
+      <div class="input">
+        <textarea id="f_content" class="xxlarge" name="content" rows="10"><%= @content if @content %></textarea>
+      </div>
+      <label for="f_slug">Page name</label>
+      <div class="input">
+        <input id="f_slug" class="xlarge" name="slug" type="text" placeholder="Page name" <%= "value=\"#{@newname}\"" if @newname %> />
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn primary" type="submit">Create</button>
+      <a href="/" class="btn">Cancel</a>
+    </div>
+  </fieldset>
+</form>
