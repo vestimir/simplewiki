@@ -4,18 +4,17 @@
   	<meta charset="UTF-8">
   	<title>Wiki</title>
     <link rel="stylesheet" href="http://twitter.github.com/bootstrap/1.4.0/bootstrap.min.css">
-    <style type="text/css">
-    body { padding-top: 60px; }
-    </style>
 </head>
-<body>
+<body style="padding-top: 60px;">
     <div class="topbar">
         <div class="fill">
             <div class="container">
                 <a class="brand" href="/">Simple Wiki</a>
+                <nav>
                 <ul class="nav">
                     <li><a href="/contents">Contents</a></li>
                 </ul>
+                </nav>
             </div>
         </div>
     </div>
@@ -27,8 +26,8 @@
             </div>
       	</div>
         <footer>
-          <% if @slug %>
-            <a href="<%= url("/#{@slug}/edit") %>">Edit page</a>
+          <% if @edit %>
+          <a href="<%= url("/edit/#{@slug}") %>">Edit page</a>
           <% end %>
         </footer>
     </div>
