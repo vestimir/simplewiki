@@ -16,7 +16,15 @@ describe 'Wiki' do
 
     it "have right content" do
       should match %r/<p>This <em>is<\/em> Markdown<\/p>/i
-    end  
+    end
+  end
+
+  context "non-existing page" do
+    before { get '/non-exists' }
+
+    it "catch the exception" do
+      should match %r/No such file/i
+    end
   end
 
   context "sample page" do
