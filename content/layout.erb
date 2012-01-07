@@ -10,13 +10,19 @@
         <div class="fill">
             <div class="container">
                 <a class="brand" href="/">Simple Wiki</a>
+
+                <form action="<%= url('/search') %>" method="get" class="pull-left">
+                  <input name="q" type="search" class="input-small span4" placeholder="Search...">
+                  <button class="hide" type="submit">Search</button>
+                </form>
+
                 <nav>
-                <ul class="nav">
-                    <li><a href="/contents">Contents</a></li>
-                </ul>
-                <ul class="nav secondary-nav">
-                    <li><a href="/new">New page</a></li>
-                </ul>
+                  <ul class="nav">
+                      <li><a href="/contents">Contents</a></li>
+                  </ul>
+                  <ul class="nav secondary-nav">
+                      <li><a href="/new">New page</a></li>
+                  </ul>
                 </nav>
             </div>
         </div>

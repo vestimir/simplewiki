@@ -7,45 +7,45 @@ describe 'Wiki' do
   let(:app) { SimpleWiki }
   subject { last_response.body }
 
-  context "main page" do
+  context 'main page' do
     before { get '/' }
 
-    it "have layout" do 
+    it 'have layout' do
       should match %r/<!doctype html>/i
     end
 
-    it "have right content" do
+    it 'have right content' do
       should match %r/<p>This <em>is<\/em> Markdown<\/p>/i
     end
   end
 
-  context "non-existing page" do
+  context 'non-existing page' do
     before { get '/non-exists' }
 
-    it "redirect to new page form" do
+    it 'redirect to new page form' do
       last_response.should be_redirect
       follow_redirect!
       last_request.url.should == "http://example.org/new/non-exists"
     end
   end
 
-  context "sample page" do
+  context 'sample page' do
     before { get '/sample' }
-    it "have right content" do
+    it 'have right content' do
       should match %r/<p>This is a page<\/p>/i
     end
   end
 
-  context "table of contents" do
+  context 'table of contents' do
     before { get '/contents' }
-    it "include all files" do
+    it 'include all files' do
       read_dir(settings.views).each_with_object([]) do |f,arr|
         should match %r/<a href="\/#{f.chomp('.md')}">/i
       end
     end
   end
 
-  context "new page" do
+  context 'new page' do
     before {
       @slug = '__spec_new_page'
       @file_name = File.join(settings.views,"#{@slug}.md")
@@ -65,7 +65,7 @@ describe 'Wiki' do
     end
   end
 
-  context "editing pages" do
+  context 'editing pages' do
     before {
       @slug = '__spec'
       @file_name = File.join(settings.views,"#{@slug}.md")
@@ -94,6 +94,40 @@ describe 'Wiki' do
     it 'delete page on empty content' do
       post @slug, :content => ''
       File.exists?(@file_name).should == false
+    end
+  end
+
+  context 'searching pages' do
+    before {
+      @slug = 'search_me'
+      @file_name = File.join(settings.views, "#{@slug}.md")
+      File.open(@file_name, 'w+') { |f| f.write('abrakadabra') }
+    }
+    after {
+      File.delete(@file_name) if File.exists?(@file_name)
+    }
+
+    it 'should load a page on exact match' do
+      get '/search?q=search+me'
+      follow_redirect!
+      last_request.url.should == 'http://example.org/%s' % @slug
+    end
+
+    it 'should redirect to homepage on empty string' do
+      get '/search?q='
+      follow_redirect!
+      last_request.url.should == "http://example.org/"
+    end
+
+    it 'should redirect to homepage if search query is less than 3 chars' do
+      get '/search?q=as'
+      follow_redirect!
+      last_request.url.should == "http://example.org/"
+    end
+
+    it 'should display results page' do
+      get '/search?q=abrakadabra'
+      should match %r/#{@slug}<\/a>/i
     end
   end
 end

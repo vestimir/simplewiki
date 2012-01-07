@@ -37,6 +37,24 @@ class SimpleWiki < Sinatra::Base
     erb '<h1>Table of Contents</h1><ul>' + contents + '</ul>'
   end
 
+  get '/search' do
+    #redirect to index if query string is empty
+    redirect to('/') if params[:q].empty? or params[:q].length < 3
+
+    #redirect to the page if there's an exact match in the title
+    page = params[:q].gsub(" ", "_").downcase
+    redirect to("/#{page}") if page_exists?(page)
+
+    #finally search through files
+    results = [];
+    read_dir(settings.views).each do |f|
+      content = File.new(File.join(settings.views, f)).read
+      slug = f.gsub('.md', '')
+      results << '<li><a href="/' + slug + '">' + slug + '</a></li>' if content.match %r/#{params[:q]}/i
+    end
+    erb "<h1>Search results for &quot;#{params[:q]}&quot;</h1><ul>" + results.join + '</ul>'
+  end
+
   get '/new' do
     erb :new
   end
