@@ -4,8 +4,9 @@ require 'sinatra'
 require 'rdiscount'
 
 module WikiHelpers
+  #sorts files by modification date and filters wiki templates and ./..
   def read_dir(dir)
-    Dir.entries(dir).map {|i| i unless $excl.include?(i) or i.match(%r/^\./i)}.compact
+    Dir.entries(dir).map {|i| i unless $excl.include?(i) or i.match(%r/^\./i)}.compact.sort_by {|c| File.stat(File.join(settings.views, c)).mtime}.reverse
   end
 
   def page_exists?(page)
@@ -76,4 +77,4 @@ class SimpleWiki < Sinatra::Base
       redirect page.to_sym
     end
   end
-end  
+end
