@@ -1,0 +1,14 @@
+*.orig
+*.rej
+*~
+*.log
+*.db
+.DS_Store
+backup
+.idea
+.bundle
+.rsync_cache
+tmp/**/*
+tmp/restart.txt
+bin
+coverage
