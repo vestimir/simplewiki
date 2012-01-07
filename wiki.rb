@@ -61,13 +61,9 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/:page' do |page|
-    begin
-      redirect "/new/#{page}" unless page_exists?(page)
-      @slug, @edit = page, true
-      markdown page.to_sym
-    rescue Exception => e
-      erb "<p><div class='alert-message error'>#{e.to_s}</div></p>"
-    end
+    redirect "/new/#{page}" unless page_exists?(page)
+    @slug, @edit = page, true
+    markdown page.to_sym
   end
 
   post '/:page' do |page|

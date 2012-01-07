@@ -22,8 +22,10 @@ describe 'Wiki' do
   context "non-existing page" do
     before { get '/non-exists' }
 
-    it "catch the exception" do
-      should match %r/No such file/i
+    it "redirect to new page form" do
+      last_response.should be_redirect
+      follow_redirect!
+      last_request.url.should == "http://example.org/new/non-exists"
     end
   end
 
@@ -40,6 +42,26 @@ describe 'Wiki' do
       read_dir(settings.views).each_with_object([]) do |f,arr|
         should match %r/<a href="\/#{f.chomp('.md')}">/i
       end
+    end
+  end
+
+  context "new page" do
+    before {
+      @slug = '__spec_new_page'
+      @file_name = File.join(settings.views,"#{@slug}.md")
+    }
+    after {
+      File.delete(@file_name) if File.exists?(@file_name)
+    }
+
+    it 'show new page form' do
+      get '/new'
+      should match %r/<form action="http:\/\/example.org\/save" method="post"/i
+    end
+
+    it 'save content' do
+      post '/save', :slug => '  Spec New Page', :content => 'test. please ignore'
+      File.new(@file_name).read.should match %r/test. please ignore/i
     end
   end
 
