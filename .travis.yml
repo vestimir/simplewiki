@@ -1,0 +1,11 @@
+language: ruby
+rvm:
+  - 1.9.2
+  - 1.9.3
+  - jruby
+  - rbx-19mode
+  - ruby-head
+env: DB=sqlite
+branches:
+  only:
+    - master
