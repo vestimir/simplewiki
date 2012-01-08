@@ -12,6 +12,10 @@ module WikiHelpers
   def page_exists?(page)
     File.exists?(File.join(settings.views,"#{page}.md")) and not $excl.include?(page)
   end
+
+  def link_to(page)
+    '<a href="/' + page + '">' + page + '</a>'
+  end
 end
 
 class SimpleWiki < Sinatra::Base
@@ -33,8 +37,7 @@ class SimpleWiki < Sinatra::Base
 
   get '/contents' do
     contents = read_dir(settings.views).each_with_object([]) do |f,arr|
-      slug = f.chomp('.md')
-      arr << '<li><a href="/' + slug + '">' + slug + '</a></li>'
+      arr << "<li>#{link_to(f.chomp('.md'))}</li>"
     end.join
     erb '<h1>Table of Contents</h1><ul>' + contents + '</ul>'
   end
@@ -48,13 +51,11 @@ class SimpleWiki < Sinatra::Base
     redirect to("/#{page}") if page_exists?(page)
 
     #finally search through files
-    results = [];
-    read_dir(settings.views).each do |f|
+    results = read_dir(settings.views).each_with_object([]) do |f,arr|
       content = File.new(File.join(settings.views, f)).read
-      slug = f.gsub('.md', '')
-      results << '<li><a href="/' + slug + '">' + slug + '</a></li>' if content.match %r/#{params[:q]}/i
-    end
-    erb "<h1>Search results for &quot;#{params[:q]}&quot;</h1><ul>" + results.join + '</ul>'
+      arr << "<li>#{link_to(f.chomp('.md'))}</li>" if content.match %r/#{params[:q]}/i
+    end.join
+    erb "<h1>Search results for &quot;#{params[:q]}&quot;</h1><ul>" + results + '</ul>'
   end
 
   get '/new' do
@@ -97,4 +98,7 @@ class SimpleWiki < Sinatra::Base
       redirect page.to_sym
     end
   end
+
+  # start the server if ruby file executed directly
+  run! if app_file == $0
 end
