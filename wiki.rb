@@ -26,6 +26,7 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/' do
+    @edit = true
     markdown :homepage
   end
 
