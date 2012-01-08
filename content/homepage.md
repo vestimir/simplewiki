@@ -1,1 +1,1 @@
-This _is_ Markdown
+This _is_ a [link](/sample)

@@ -89,7 +89,7 @@ class SimpleWiki < Sinatra::Base
 
   post '/:page' do |page|
     fname = File.join(settings.views,"#{page}.md")
-    if params[:content].empty?
+    if params[:content].empty? and page != 'homepage'
       File.delete(fname)
       redirect '/'
     else

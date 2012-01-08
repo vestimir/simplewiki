@@ -14,8 +14,8 @@ describe 'Wiki' do
       should match %r/<!doctype html>/i
     end
 
-    it 'have right content' do
-      should match %r/<p>This <em>is<\/em> Markdown<\/p>/i
+    it 'should exists' do
+      File.exists?(File.join(settings.views, 'homepage.md')).should == true
     end
   end
 
@@ -26,13 +26,6 @@ describe 'Wiki' do
       last_response.should be_redirect
       follow_redirect!
       last_request.url.should == "http://example.org/new/non-exists"
-    end
-  end
-
-  context 'sample page' do
-    before { get '/sample' }
-    it 'have right content' do
-      should match %r/<p>This is a page<\/p>/i
     end
   end
 
@@ -94,6 +87,11 @@ describe 'Wiki' do
     it 'delete page on empty content' do
       post @slug, :content => ''
       File.exists?(@file_name).should == false
+    end
+
+    it 'should not delete homepage' do
+      post 'homepage', :content => ''
+      File.exists?(File.join(settings.views, 'homepage.md')).should == true
     end
   end
 
