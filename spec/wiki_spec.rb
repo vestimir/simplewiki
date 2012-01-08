@@ -15,7 +15,7 @@ describe 'Wiki' do
     end
 
     it 'should exists' do
-      File.exists?(File.join(settings.views, 'homepage.md')).should == true
+      page_exists?('homepage').should == true
     end
   end
 
@@ -52,7 +52,7 @@ describe 'Wiki' do
       should match %r/<form action="http:\/\/example.org\/save" method="post"/i
     end
 
-    it 'save content' do
+    it 'save the content' do
       post '/save', :slug => '  Spec New Page', :content => 'test. please ignore'
       File.new(@file_name).read.should match %r/test. please ignore/i
     end
@@ -91,7 +91,7 @@ describe 'Wiki' do
 
     it 'should not delete homepage' do
       post 'homepage', :content => ''
-      File.exists?(File.join(settings.views, 'homepage.md')).should == true
+      page_exists?('homepage').should == true
     end
   end
 

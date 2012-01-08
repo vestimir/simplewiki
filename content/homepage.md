@@ -1,1 +1,0 @@
-This _is_ a [link](/sample)
