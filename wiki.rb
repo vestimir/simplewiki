@@ -27,7 +27,8 @@ class SimpleWiki < Sinatra::Base
 
   get '/' do
     @edit = true
-    markdown :homepage
+    @slug = 'homepage'
+    markdown @slug.to_sym
   end
 
   get '/contents' do
