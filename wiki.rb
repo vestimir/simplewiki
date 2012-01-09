@@ -2,55 +2,7 @@
 
 require 'sinatra'
 require 'rdiscount'
-
-class Page
-  attr_reader :name
-
-  EXCLUDES = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
-
-  def Page.dir
-    File.join(File.dirname(__FILE__),'content')
-  end
-
-  def Page.list
-    Dir.entries(Page.dir).map { |i|
-      i.chomp('.md') unless EXCLUDES.include?(i) or i.match(%r/^\./i)
-    }.compact.sort_by {|c| 
-        File.stat(File.join(Page.dir, "#{c}.md")).mtime
-      }.reverse
-  end
-
-  def initialize(name)
-    @name = name
-    @fname = File.join(Page.dir,"#{self.title}.md")
-    @excl = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
-  end
-
-  def title
-    name.gsub(" ", "_").downcase
-  end
-
-  def exists?
-    File.exists?(@fname) and not EXCLUDES.include?(self.title)
-  end
-
-  def raw
-    File.new(@fname).read
-  end
-
-  def to_link
-    '<a href="/' + name + '">' + name + '</a>'
-  end
-
-  def save!(content)
-    File.open(@fname,"w+") { |f| f.write(content) }
-  end
-
-  def destroy!
-    File.delete(@fname)
-  end
-end
-
+require File.join(File.dirname(__FILE__),'page')
 
 class SimpleWiki < Sinatra::Base
   configure do
@@ -59,8 +11,7 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/' do
-    @edit = true
-    @page = Page.new('homepage')
+    @page, @edit = Page.new('homepage'), true
     markdown @page.title.to_sym
   end
 
@@ -88,13 +39,17 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/new' do
+    @page = Page.new('New page')
     erb :new
   end
 
   get '/new/:page' do |page|
-    redirect "/#{page}" if Page.new(page).exists?
-    @newname = page
-    erb :new
+    @page = Page.new(page)
+    if @page.exists?
+      redirect @page.title.to_sym
+    else
+      erb :new
+    end
   end
 
   post '/save' do
@@ -105,8 +60,7 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/edit/:page' do |page|
-    @slug = page
-    @content = Page.new(@slug).raw
+    @page = Page.new(page)
     erb :edit
   end
 
