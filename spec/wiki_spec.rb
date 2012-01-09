@@ -2,7 +2,6 @@ require ::File.expand_path('../spec_helper.rb', __FILE__)
 
 describe 'Wiki' do
   include Rack::Test::Methods
-  include WikiHelpers
 
   let(:app) { SimpleWiki }
   subject { last_response.body }
@@ -15,7 +14,7 @@ describe 'Wiki' do
     end
 
     it 'should exists' do
-      page_exists?('homepage').should == true
+      Page.new('homepage').exists?.should == true
     end
   end
 
@@ -32,19 +31,18 @@ describe 'Wiki' do
   context 'table of contents' do
     before { get '/contents' }
     it 'include all files' do
-      read_dir(settings.views).each_with_object([]) do |f,arr|
-        should match %r/<a href="\/#{f.chomp('.md')}">/i
+      Page.list.each_with_object([]) do |p,arr|
+        should match %r/#{Page.new(p).to_link}/i
       end
     end
   end
 
   context 'new page' do
     before {
-      @slug = '__spec_new_page'
-      @file_name = File.join(settings.views,"#{@slug}.md")
+      @page = Page.new('  Spec New Page')
     }
     after {
-      File.delete(@file_name) if File.exists?(@file_name)
+      @page.destroy!
     }
 
     it 'show new page form' do
@@ -53,62 +51,69 @@ describe 'Wiki' do
     end
 
     it 'save the content' do
-      post '/save', :slug => '  Spec New Page', :content => 'test. please ignore'
-      File.new(@file_name).read.should match %r/test. please ignore/i
+      post '/save', :slug => @page.name, :content => 'test. please ignore'
+      @page.raw.should match %r/test. please ignore/i
     end
+
+    it 'redirect to the page, if exists' do
+      @page.save!('test. please ignore')
+      get "/new/#{@page.title}"
+      last_response.should be_redirect
+      follow_redirect!
+      last_request.url.should == "http://example.org/%s" % @page.title
+    end
+
   end
 
   context 'editing pages' do
     before {
-      @slug = '__spec'
-      @file_name = File.join(settings.views,"#{@slug}.md")
-      post @slug, :content => 'test. please ignore'
+      @page = Page.new('__spec')
+      post @page.title, :content => 'test. please ignore'
     }
     after {
-      File.delete(@file_name) if File.exists?(@file_name)
+      @page.destroy!
     }
 
     it 'show edit form' do
-      get "/edit/%s" % @slug
-      should match %r/<form action="http:\/\/example.org\/#{@slug}" method="post"/i
+      get "/edit/%s" % @page.title
+      should match %r/<form action="http:\/\/example.org\/#{@page.title}" method="post"/i
     end
 
     it 'save the content' do
-      File.new(@file_name).read.should match %r/test. please ignore/i
+      @page.raw.should match %r/test. please ignore/i
     end
 
     it 'redirect to the same page after save' do
       last_response.should be_redirect
       follow_redirect!
-      last_request.url.should == "http://example.org/%s" % @slug
+      last_request.url.should == "http://example.org/%s" % @page.title
       should match %r/test. please ignore/i
     end
 
     it 'delete page on empty content' do
-      post @slug, :content => ''
-      File.exists?(@file_name).should == false
+      post @page.title, :content => ''
+      @page.exists?.should == false
     end
 
     it 'should not delete homepage' do
       post 'homepage', :content => ''
-      page_exists?('homepage').should == true
+      Page.new('homepage').exists?.should == true
     end
   end
 
   context 'searching pages' do
     before {
-      @slug = 'search_me'
-      @file_name = File.join(settings.views, "#{@slug}.md")
-      File.open(@file_name, 'w+') { |f| f.write('abrakadabra') }
+      @page = Page.new('search_me')
+      @page.save!('abrakadabra')
     }
     after {
-      File.delete(@file_name) if File.exists?(@file_name)
+      @page.destroy!
     }
 
     it 'should load a page on exact match' do
       get '/search?q=search+me'
       follow_redirect!
-      last_request.url.should == 'http://example.org/%s' % @slug
+      last_request.url.should == 'http://example.org/%s' % @page.title
     end
 
     it 'should redirect to homepage on empty string' do
@@ -125,7 +130,7 @@ describe 'Wiki' do
 
     it 'should display results page' do
       get '/search?q=abrakadabra'
-      should match %r/#{@slug}<\/a>/i
+      should match %r/#{@page.title}<\/a>/i
     end
   end
 end
