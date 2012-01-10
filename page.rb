@@ -3,15 +3,13 @@
 class Page
   attr_reader :name
 
-  EXCLUDES = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
-
   def Page.dir
     File.join(File.dirname(__FILE__),'content')
   end
 
-  def Page.list
+  def Page.list(excl=[])
     Dir.entries(Page.dir).map { |i|
-      i.chomp('.md') unless EXCLUDES.include?(i) or i.match(%r/^\./i)
+      i.chomp('.md') unless excl.include?(i) or i.match(%r/^\./i)
     }.compact.sort_by {|c| 
         File.stat(File.join(Page.dir, "#{c}.md")).mtime
       }.reverse
@@ -20,23 +18,18 @@ class Page
   def initialize(name)
     @name = name
     @fname = File.join(Page.dir,"#{self.title}.md")
-    @excl = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
   end
 
   def title
     name.gsub(" ", "_").downcase
   end
 
-  def exists?
-    File.exists?(@fname) and not EXCLUDES.include?(self.title)
+  def exists?(excl=[])
+    File.exists?(@fname) and not excl.include?(self.title)
   end
 
   def raw
     File.new(@fname).read
-  end
-
-  def to_link
-    '<a href="/' + name + '">' + name + '</a>'
   end
 
   def save!(content)

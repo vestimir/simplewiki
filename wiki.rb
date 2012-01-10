@@ -4,10 +4,21 @@ require 'sinatra'
 require 'rdiscount'
 require File.join(File.dirname(__FILE__),'page')
 
+module WikiHelpers
+  def link_to(page)
+    '<a href="/' + page + '">' + page + '</a>'
+  end
+end
+
 class SimpleWiki < Sinatra::Base
   configure do
+    $excl = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
     set :markdown, :layout_engine => :erb
     set :views, Page.dir
+  end
+
+  helpers do
+    include WikiHelpers
   end
 
   get '/' do
@@ -16,8 +27,8 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/contents' do
-    contents = Page.list.each_with_object([]) do |p,arr|
-      arr << "<li>#{Page.new(p).to_link}</li>"
+    contents = Page.list($excl).each_with_object([]) do |p,arr|
+      arr << "<li>#{link_to(p)}</li>"
     end.join
     erb '<h1>Table of Contents</h1><ul>' + contents + '</ul>'
   end
@@ -28,12 +39,12 @@ class SimpleWiki < Sinatra::Base
 
     #redirect to the page if there's an exact match in the title
     page = params[:q].gsub(" ", "_").downcase
-    redirect to("/#{page}") if Page.new(page).exists?
+    redirect to("/#{page}") if Page.new(page).exists?($excl)
 
     #finally search through files
-    results = Page.list.each_with_object([]) do |p,arr|
+    results = Page.list($excl).each_with_object([]) do |p,arr|
       page = Page.new(p)
-      arr << "<li>#{page.to_link}</li>" if page.raw.match %r/#{params[:q]}/i
+      arr << "<li>#{link_to(p)}</li>" if page.raw.match %r/#{params[:q]}/i
     end.join
     erb "<h1>Search results for &quot;#{params[:q]}&quot;</h1><ul>" + results + '</ul>'
   end
@@ -45,7 +56,7 @@ class SimpleWiki < Sinatra::Base
 
   get '/new/:page' do |page|
     @page = Page.new(page)
-    if @page.exists?
+    if @page.exists?($excl)
       redirect @page.title.to_sym
     else
       erb :new
@@ -66,7 +77,7 @@ class SimpleWiki < Sinatra::Base
 
   get '/:page' do |page|
     @page, @edit = Page.new(page), true
-    redirect "/new/#{page}" unless @page.exists?
+    redirect "/new/#{page}" unless @page.exists?($excl)
     markdown @page.title.to_sym
   end
 

@@ -2,6 +2,7 @@ require ::File.expand_path('../spec_helper.rb', __FILE__)
 
 describe 'Wiki' do
   include Rack::Test::Methods
+  include WikiHelpers
 
   let(:app) { SimpleWiki }
   subject { last_response.body }
@@ -14,7 +15,7 @@ describe 'Wiki' do
     end
 
     it 'should exists' do
-      Page.new('homepage').exists?.should == true
+      Page.new('homepage').exists?($excl).should == true
     end
   end
 
@@ -31,8 +32,8 @@ describe 'Wiki' do
   context 'table of contents' do
     before { get '/contents' }
     it 'include all files' do
-      Page.list.each_with_object([]) do |p,arr|
-        should match %r/#{Page.new(p).to_link}/i
+      Page.list($excl).each_with_object([]) do |p,arr|
+        should match %r/#{link_to(p)}/i
       end
     end
   end
@@ -92,12 +93,12 @@ describe 'Wiki' do
 
     it 'delete page on empty content' do
       post @page.title, :content => ''
-      @page.exists?.should == false
+      @page.exists?($excl).should == false
     end
 
     it 'should not delete homepage' do
       post 'homepage', :content => ''
-      Page.new('homepage').exists?.should == true
+      Page.new('homepage').exists?($excl).should == true
     end
   end
 
