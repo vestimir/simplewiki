@@ -36,7 +36,7 @@
       	</div>
         <footer>
           <% if @edit %>
-          <a href="<%= url("/edit/#{@slug}") %>">Edit page</a>
+          <a href="<%= url("/edit/#{@page.title}") %>">Edit page</a>
           <% end %>
         </footer>
     </div>

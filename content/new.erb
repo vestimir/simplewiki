@@ -4,11 +4,11 @@
     <div class="clearfix">
       <label for="f_content">Content</label>
       <div class="input">
-        <textarea id="f_content" class="xxlarge" name="content" rows="10"><%= @content if @content %></textarea>
+        <textarea id="f_content" class="xxlarge" name="content" rows="10"></textarea>
       </div>
       <label for="f_slug">Page name</label>
       <div class="input">
-        <input id="f_slug" class="xlarge" name="slug" type="text" placeholder="Page name" <%= "value=\"#{@newname}\"" if @newname %> />
+        <input id="f_slug" class="xlarge" name="slug" type="text" placeholder="Page name" <%= "value=\"#{@page.name}\"" %> />
       </div>
     </div>
     <div class="actions">

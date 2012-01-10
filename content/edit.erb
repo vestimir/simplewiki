@@ -1,15 +1,15 @@
-<form action="<%= url("/#{@slug}") %>" method="post" class="form-stacked">
+<form action="<%= url("/#{@page.title}") %>" method="post" class="form-stacked">
   <fieldset>
     <legend>Edit content</legend>
     <div class="clearfix">
       <label for="f_content">Content</label>
       <div class="input">
-        <textarea id="f_content" class="xxlarge" name="content" rows="10"><%= @content %></textarea>
+        <textarea id="f_content" class="xxlarge" name="content" rows="10"><%= @page.raw %></textarea>
       </div>
     </div>
     <div class="actions">
       <button class="btn primary" type="submit">Save</button>
-      <a href="/<%= @slug %>" class="btn">Cancel</a>
+      <a href="/<%= @page.title %>" class="btn">Cancel</a>
     </div>
   </fieldset>
 </form>
