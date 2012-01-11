@@ -21,13 +21,15 @@
                     <button class="hide" type="submit">Search</button>
                   </form>
 
-                  <ul class="nav secondary-nav">
-                    <% if signed_in? %>
-                    <a href="/logout">Logout</a>
+                  <p class="pull-right">
+                  <% if signed_in? %>
+                      <%= current_user %>
+                      <img class="nav" src="http://twivatar.herokuapp.com/<%= current_user %>/mini" />
+                      <a href="/logout">Logout</a>
                     <% else %>  
-                    <a href="/login">Login</a>
+                      <a href="/login">Login</a>
                     <% end %>  
-                  </ul>
+                  </p>
                 </nav>
             </div>
         </div>

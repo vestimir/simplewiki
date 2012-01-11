@@ -6,6 +6,8 @@ require 'twitter'
 require 'yaml'
 require File.join(File.dirname(__FILE__),'page')
 
+ENV['RACK_ENV'] ||= "development"
+
 module WikiHelpers
   def link_to(page)
     '<a href="/' + page + '">' + page + '</a>'
@@ -13,6 +15,57 @@ module WikiHelpers
 
   def signed_in?
     !session[:oauth][:access_token].nil?
+  end
+
+  def current_user
+    session[:oauth] ? session[:oauth][:user] : nil
+  end
+
+  def authorize!
+    return if ENV['RACK_ENV'] == 'test'
+    redirect '/login' unless signed_in?
+  end
+
+  def oauth_consumer
+    OAuth::Consumer.new(SimpleWiki::TW_KEY, SimpleWiki::TW_SECRET, :site => "http://twitter.com")
+  end
+
+  def setup_client(access_token)
+    return nil unless access_token
+    Twitter.configure do |config|
+      config.consumer_key = SimpleWiki::TW_KEY
+      config.consumer_secret = SimpleWiki::TW_SECRET
+      config.oauth_token = access_token.token
+      config.oauth_token_secret = access_token.secret
+    end
+    @client = Twitter::Client.new
+    return nil unless @client
+    session[:oauth][:user] = @client.current_user.screen_name
+    @client
+  end
+
+  def get_request_token
+    request_token = session[:oauth][:request_token]   
+    request_token_secret = session[:oauth][:request_token_secret]
+    if request_token.nil? or request_token_secret.nil?
+      @request_token = oauth_consumer.get_request_token(:oauth_callback => "#{SimpleWiki::BASE_URL}/auth")
+      session[:oauth][:request_token] = @request_token.token
+      session[:oauth][:request_token_secret] = @request_token.secret
+    else
+      # we made this user's request token before, so recreate the object
+      @request_token = OAuth::RequestToken.new(oauth_consumer, request_token, request_token_secret)
+    end
+    @request_token
+  end
+
+  def get_access_token
+    access_token = session[:oauth][:access_token]
+    access_token_secret = session[:oauth][:access_token_secret]
+    unless access_token.nil? or access_token_secret.nil?
+      # the ultimate goal is to get here
+      @access_token = OAuth::AccessToken.new(oauth_consumer, access_token, access_token_secret)
+    end
+    return @access_token
   end
 end
 
@@ -23,7 +76,15 @@ class SimpleWiki < Sinatra::Base
     enable :logging
     set :environment, ENV['RACK_ENV']
     set :markdown, :layout_engine => :erb
-    $c = YAML.load_file(File.join(File.dirname(__FILE__),'config.yml'))
+    # ready to deploy on heroku
+    begin
+      config = YAML.load_file(File.join(File.dirname(__FILE__),'config.yml'))
+    rescue
+      config = Hash.new
+    end  
+    TW_KEY = ENV['TW_KEY'] || config['tw_key']
+    TW_SECRET = ENV['TW_SECRET'] || config['tw_secret']
+    BASE_URL = ENV['BASE_URL'] || config['base_url']
   end
 
   helpers do
@@ -33,26 +94,12 @@ class SimpleWiki < Sinatra::Base
 
   before do
     session[:oauth] ||= {}   # we'll store the request and access tokens here
-    @consumer = OAuth::Consumer.new($c['tw_key'], $c['tw_secret'], :site => "http://twitter.com")
-    # generate a request token for this user session if we haven't already
-    request_token = session[:oauth][:request_token]   
-    request_token_secret = session[:oauth][:request_token_secret]
-    if request_token.nil? or request_token_secret.nil?
-      @request_token = @consumer.get_request_token(:oauth_callback => "#{$c['host']}/auth")
-      session[:oauth][:request_token] = @request_token.token
-      session[:oauth][:request_token_secret] = @request_token.secret
-    else
-      # we made this user's request token before, so recreate the object
-      @request_token = OAuth::RequestToken.new(@consumer, request_token, request_token_secret)  
-    end  
-    access_token = session[:oauth][:access_token]
-    access_token_secret = session[:oauth][:access_token_secret]
-    unless access_token.nil? or access_token_secret.nil?
-      # the ultimate goal is to get here
-      @access_token = OAuth::AccessToken.new(@consumer, access_token, access_token_secret)
-      oauth = Twitter::OAuth.new($c['tw_key'], $c['tw_secret'])
-      oauth.authorize_from_access(@access_token.token, @access_token.secret)     
-      @client = Twitter::Base.new(oauth)
+    begin
+      @request_token = get_request_token
+      @access_token = get_access_token unless @access_token
+      @client = setup_client(@access_token)
+    rescue Exception => @ex
+      logger.error @ex.to_s
     end
   end
 
@@ -62,7 +109,7 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/contents' do
-    redirect '/' unless @access_token
+    authorize!
     contents = Page.list.each_with_object([]) do |p,arr|
       arr << "<li>#{link_to(p)}</li>"
     end.join
@@ -70,7 +117,7 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/search' do
-    redirect '/' unless @access_token
+    authorize!
     #redirect to index if query string is empty
     redirect to('/') if params[:q].empty? or params[:q].length < 3
 
@@ -88,11 +135,17 @@ class SimpleWiki < Sinatra::Base
 
   # OAuth
   get '/login' do
-    redirect @request_token.authorize_url
+    begin
+      redirect @request_token.authorize_url
+    rescue Exception => @ex
+      return erb %{ <div class="alert-message error">problem: <%=h @ex.to_s %></div> }
+    end
   end
 
   get '/logout' do
     session[:oauth] = nil
+    @request_token = nil
+    @access_token = nil
     redirect '/'
   end
 
@@ -106,13 +159,13 @@ class SimpleWiki < Sinatra::Base
   # Working with Pages
 
   get '/new' do
-    redirect '/' unless @access_token
+    authorize!
     @page = Page.new('New page')
     erb :new
   end
 
   get '/new/:page' do |page|
-    redirect '/' unless @access_token
+    authorize!
     @page = Page.new(page)
     if @page.exists?
       redirect @page.title.to_sym
@@ -122,27 +175,28 @@ class SimpleWiki < Sinatra::Base
   end
 
   post '/save' do
-    redirect '/' if params[:slug].empty? or params[:content].empty? or not @access_token
+    authorize!
+    redirect '/' if params[:slug].empty? or params[:content].empty?
     @page = Page.new(params[:slug])
     @page.save!(params[:content])
     redirect @page.title.to_sym
   end
 
   get '/edit/:page' do |page|
-    redirect '/' unless @access_token
+    authorize!
     @page = Page.new(page)
     erb :edit
   end
 
   get '/:page' do |page|
-    redirect '/' unless @access_token
+    authorize!
     @page, @edit = Page.new(page), true
     redirect "/new/#{page}" unless @page.exists?
     erb '<%= @page.to_html %>'
   end
 
   post '/:page' do |page|
-    redirect '/' unless @access_token
+    authorize!
     @page = Page.new(page)
     if params[:content].empty? and page != 'homepage'
       @page.destroy!
