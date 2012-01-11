@@ -2,7 +2,6 @@
 
 require 'sinatra'
 require 'sinatra/config_file'
-require 'rdiscount'
 require File.join(File.dirname(__FILE__),'page')
 
 module WikiHelpers
@@ -14,9 +13,7 @@ end
 class SimpleWiki < Sinatra::Base
   configure do
     config_file File.join(File.dirname(__FILE__),'config.yml') 
-    $excl = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
     set :markdown, :layout_engine => :erb
-    set :views, Page.dir
   end
 
   helpers do
@@ -25,11 +22,11 @@ class SimpleWiki < Sinatra::Base
 
   get '/' do
     @page, @edit = Page.new('homepage'), true
-    markdown @page.title.to_sym
+    erb '<%= @page.to_html %>'
   end
 
   get '/contents' do
-    contents = Page.list($excl).each_with_object([]) do |p,arr|
+    contents = Page.list.each_with_object([]) do |p,arr|
       arr << "<li>#{link_to(p)}</li>"
     end.join
     erb '<h1>Table of Contents</h1><ul>' + contents + '</ul>'
@@ -41,10 +38,10 @@ class SimpleWiki < Sinatra::Base
 
     #redirect to the page if there's an exact match in the title
     page = params[:q].gsub(" ", "_").downcase
-    redirect to("/#{page}") if Page.new(page).exists?($excl)
+    redirect to("/#{page}") if Page.new(page).exists?
 
     #finally search through files
-    results = Page.list($excl).each_with_object([]) do |p,arr|
+    results = Page.list.each_with_object([]) do |p,arr|
       page = Page.new(p)
       arr << "<li>#{link_to(p)}</li>" if page.raw.match %r/#{params[:q]}/i
     end.join
@@ -58,7 +55,7 @@ class SimpleWiki < Sinatra::Base
 
   get '/new/:page' do |page|
     @page = Page.new(page)
-    if @page.exists?($excl)
+    if @page.exists?
       redirect @page.title.to_sym
     else
       erb :new
@@ -79,8 +76,8 @@ class SimpleWiki < Sinatra::Base
 
   get '/:page' do |page|
     @page, @edit = Page.new(page), true
-    redirect "/new/#{page}" unless @page.exists?($excl)
-    markdown @page.title.to_sym
+    redirect "/new/#{page}" unless @page.exists?
+    erb '<%= @page.to_html %>'
   end
 
   post '/:page' do |page|
