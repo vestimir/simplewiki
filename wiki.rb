@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 require 'sinatra'
+require 'sinatra/config_file'
 require 'rdiscount'
 require File.join(File.dirname(__FILE__),'page')
 
@@ -12,6 +13,7 @@ end
 
 class SimpleWiki < Sinatra::Base
   configure do
+    config_file File.join(File.dirname(__FILE__),'config.yml') 
     $excl = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
     set :markdown, :layout_engine => :erb
     set :views, Page.dir
