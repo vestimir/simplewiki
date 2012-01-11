@@ -15,7 +15,7 @@ describe 'Wiki' do
     end
 
     it 'should exists' do
-      Page.new('homepage').exists?($excl).should == true
+      Page.new('homepage').exists?.should == true
     end
   end
 
@@ -32,7 +32,7 @@ describe 'Wiki' do
   context 'table of contents' do
     before { get '/contents' }
     it 'include all files' do
-      Page.list($excl).each_with_object([]) do |p,arr|
+      Page.list.each_with_object([]) do |p,arr|
         should match %r/#{link_to(p)}/i
       end
     end
@@ -93,12 +93,12 @@ describe 'Wiki' do
 
     it 'delete page on empty content' do
       post @page.title, :content => ''
-      @page.exists?($excl).should == false
+      @page.exists?.should == false
     end
 
     it 'should not delete homepage' do
       post 'homepage', :content => ''
-      Page.new('homepage').exists?($excl).should == true
+      Page.new('homepage').exists?.should == true
     end
   end
 

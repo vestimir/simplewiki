@@ -8,10 +8,10 @@ class Page
     File.join(File.dirname(__FILE__),'content')
   end
 
-  def Page.list(excl=[])
-    Dir.entries(Page.dir).map { |i|
-      i.chomp('.md') unless excl.include?(i) or i.match(%r/^\./i)
-    }.compact.sort_by {|c| 
+  def Page.list
+    Dir.entries(Page.dir).reject! {|f| f.start_with?('.') }.map { |i|
+      i.chomp('.md')
+    }.compact.sort_by {|c|
         File.stat(File.join(Page.dir, "#{c}.md")).mtime
       }.reverse
   end
@@ -25,8 +25,8 @@ class Page
     name.gsub(" ", "_").downcase
   end
 
-  def exists?(excl=[])
-    File.exists?(@fname) and not excl.include?(self.title)
+  def exists?
+    File.exists?(@fname) and not File.basename(@fname).start_with?('.')
   end
 
   def raw
