@@ -9,6 +9,7 @@ backup
 .bundle
 .rsync_cache
 config.yml
+content/*
 tmp/**/*
 tmp/restart.txt
 bin
