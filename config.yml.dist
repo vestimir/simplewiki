@@ -1,1 +1,3 @@
-foo: bar
+base_url: 'http://localhost:5000'
+tw_key: 'YOUR_TWITTER_CUSTOMER_KEY'
+tw_secret: 'YOUR_TWITTER_CUSTOMER_SECRET'
