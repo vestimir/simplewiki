@@ -8,6 +8,7 @@ backup
 .idea
 .bundle
 .rsync_cache
+config.yml
 tmp/**/*
 tmp/restart.txt
 bin
