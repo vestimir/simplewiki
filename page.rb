@@ -1,4 +1,5 @@
 # encoding: utf-8
+require 'rdiscount'
 
 class Page
   attr_reader :name
@@ -30,6 +31,10 @@ class Page
 
   def raw
     File.new(@fname).read
+  end
+
+  def to_html
+    RDiscount.new(self.raw).to_html
   end
 
   def save!(content)

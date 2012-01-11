@@ -2,7 +2,6 @@
 
 require 'sinatra'
 require 'sinatra/config_file'
-require 'rdiscount'
 require File.join(File.dirname(__FILE__),'page')
 
 module WikiHelpers
@@ -14,9 +13,8 @@ end
 class SimpleWiki < Sinatra::Base
   configure do
     config_file File.join(File.dirname(__FILE__),'config.yml') 
-    $excl = ['.', '..', 'layout.erb', 'edit.erb', 'new.erb']
+    $excl = ['.', '..', '.gitkeep']
     set :markdown, :layout_engine => :erb
-    set :views, Page.dir
   end
 
   helpers do
@@ -25,7 +23,7 @@ class SimpleWiki < Sinatra::Base
 
   get '/' do
     @page, @edit = Page.new('homepage'), true
-    markdown @page.title.to_sym
+    erb '<%= @page.to_html %>'
   end
 
   get '/contents' do
@@ -80,7 +78,7 @@ class SimpleWiki < Sinatra::Base
   get '/:page' do |page|
     @page, @edit = Page.new(page), true
     redirect "/new/#{page}" unless @page.exists?($excl)
-    markdown @page.title.to_sym
+    erb '<%= @page.to_html %>'
   end
 
   post '/:page' do |page|
