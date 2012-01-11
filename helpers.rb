@@ -7,7 +7,7 @@ ENV['RACK_ENV'] ||= "development"
 
 module WikiHelpers
   def link_to(page)
-    '<a href="/' + page + '">' + page + '</a>'
+    '<a href="/' + page + '">' + page.gsub('_', ' ').capitalize + '</a>'
   end
 
   def signed_in?
