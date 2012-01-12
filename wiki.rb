@@ -24,6 +24,8 @@ class SimpleWiki < Sinatra::Base
     TW_KEY = ENV['TW_KEY'] || config['tw_key']
     TW_SECRET = ENV['TW_SECRET'] || config['tw_secret']
     BASE_URL = ENV['BASE_URL'] || config['base_url']
+    users = ENV['USERS'] || config['users']
+    USERS = users.kind_of?(String) ? users.split(',').map(&:strip) : users
   end
 
   helpers do
