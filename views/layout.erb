@@ -10,19 +10,31 @@
         <div class="fill">
             <div class="container">
                 <a class="brand" href="/">Simple Wiki</a>
-
-                <form action="<%= url('/search') %>" method="get" class="pull-left">
-                  <input name="q" type="search" class="input-small span4" placeholder="Search...">
-                  <button class="hide" type="submit">Search</button>
-                </form>
-
                 <nav>
                   <ul class="nav">
-                      <li><a href="/contents">Contents</a></li>
-                  </ul>
-                  <ul class="nav secondary-nav">
+                    <li><a href="/contents">Contents</a></li>
+                    <% if signed_in? %>  
                       <li><a href="/new">New page</a></li>
+                      <% if @edit %>  
+                      <li><a href="<%= url("/edit/#{@page.title}") %>">Edit page</a></li>
+                      <% end %>  
+                    <% end %>  
                   </ul>
+
+                  <form action="<%= url('/search') %>" method="get" class="pull-left">
+                    <input name="q" type="search" class="input-small span4" placeholder="Search...">
+                    <button class="hide" type="submit">Search</button>
+                  </form>
+
+                  <p class="pull-right">
+                    <% if signed_in? %>
+                      <%= current_user %>
+                      <img class="nav" src="http://twivatar.herokuapp.com/<%= current_user %>/mini" />
+                      <a href="/logout">Logout</a>
+                    <% else %>  
+                      <a href="/login">Login</a>
+                    <% end %>  
+                  </p>
                 </nav>
             </div>
         </div>
@@ -34,11 +46,6 @@
                 <%= yield %>
             </div>
       	</div>
-        <footer>
-          <% if @edit %>
-          <a href="<%= url("/edit/#{@page.title}") %>">Edit page</a>
-          <% end %>
-        </footer>
     </div>
 </body>
 </html>

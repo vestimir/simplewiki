@@ -131,7 +131,7 @@ describe 'Wiki' do
 
     it 'should display results page' do
       get '/search?q=abrakadabra'
-      should match %r/#{@page.title}<\/a>/i
+      should match %r/#{@page.title.gsub('_', ' ').capitalize}<\/a>/i
     end
   end
 end
