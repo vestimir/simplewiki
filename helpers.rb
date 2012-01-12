@@ -21,7 +21,7 @@ module WikiHelpers
   def authorize!
     return if ENV['RACK_ENV'] == 'test'
     unless SimpleWiki::USERS.include?(current_user)
-      halt erb %( <div class="alert-message error">User '#{current_user}' not authorized</div> )
+      halt erb %( <div class="alert-message error">User not authorized</div> )
     end
     redirect '/login' unless signed_in?
   end

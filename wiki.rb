@@ -50,7 +50,6 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/contents' do
-    authorize!
     contents = Page.list.each_with_object([]) do |p,arr|
       arr << "<li>#{link_to(p)}</li>"
     end.join
@@ -58,7 +57,6 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/search' do
-    authorize!
     #redirect to index if query string is empty
     redirect to('/') if params[:q].empty? or params[:q].length < 3
 
@@ -130,7 +128,6 @@ class SimpleWiki < Sinatra::Base
   end
 
   get '/:page' do |page|
-    authorize!
     @page, @edit = Page.new(page), true
     redirect "/new/#{page}" unless @page.exists?
     erb '<%= @page.to_html %>'
